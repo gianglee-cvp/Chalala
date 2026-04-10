@@ -8,12 +8,17 @@ public class Character : MonoBehaviour
     [SerializeField] private Animator anim  ;   
     protected string currentAnimName ; 
     [SerializeField] protected AttackArea attackArea ;
+    [SerializeField] protected HealthBar healthBar ;
     public virtual void OnInit(){
         hp = 100 ; 
         
     }
     public virtual void OnDespawn(){
 
+    }
+    public float GetMaxHealth()
+    {
+        return 100f ; // Replace with actual max health value
     }
     protected virtual void OnDeath(){
         Debug.Log("Character died") ;
@@ -27,6 +32,13 @@ public class Character : MonoBehaviour
             {
                 hp = 0 ;
                 OnDeath() ;
+            }
+            else
+            {
+                if(healthBar != null)
+                {
+                    healthBar.SetHealth(hp) ;
+                }
             }
         }
         Debug.Log($"OnHit {damage} damage, hp left {hp}") ;

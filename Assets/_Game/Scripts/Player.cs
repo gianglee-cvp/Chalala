@@ -50,9 +50,11 @@ public class Player : Character
         horizontal = 0f ; 
         currentAnimName = null ;
         transform.position = savePoint ; 
+        healthBar.SetHealth(100f) ;
     }
     protected override void OnDeath()
     {
+        healthBar.SetHealth(0f) ;
         Debug.Log("Player died") ;
         base.OnDeath();
         ChangeAnim("die")   ;
