@@ -125,6 +125,7 @@ MonoBehaviour:
   damage: 10
   lifetime: 50
   player: {fileID: 0}
+  hitEffectPrefab: {fileID: 5737290117187228819, guid: c4b863f21066b634bafe56af2d953c6f, type: 3}
 --- !u!1 &8434897454118498746
 GameObject:
   m_ObjectHideFlags: 0

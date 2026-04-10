@@ -9,6 +9,7 @@ public class Kunai : MonoBehaviour
     public float lifetime;
     private Vector2 direction;
     public Transform player;
+    public ParticleSystem hitEffectPrefab;
     void Start()
     {
         rb.linearVelocity = transform.right * speed;
@@ -33,6 +34,10 @@ public class Kunai : MonoBehaviour
             if (enemy != null)
             {
                 enemy.OnHit(damage);
+                // Instantiate hit effect at the collision point
+                ContactPoint2D contact = collision.GetContact(0);
+                Instantiate(hitEffectPrefab , contact.point , transform.rotation) ;
+                hitEffectPrefab.Play() ;
             }
             Destroy(gameObject);
         }
