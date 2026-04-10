@@ -12,6 +12,7 @@ public class Player : Character
 
     [SerializeField] private float speed = 5f   ;
     [SerializeField] private float jumpForce = 350f   ; 
+    [SerializeField] private GameObject kunai ; 
 
     private int coin = 0 ; 
     private bool isGrounded = true  ; 
@@ -159,7 +160,8 @@ public class Player : Character
     private void Throw()
     {
         isAttack = true ;
-        ChangeAnim("throw")   ;
+        ChangeAnim("throw") ;
+        Instantiate(kunai, transform.position + transform.right * 0.5f, transform.rotation) ;
         Invoke(nameof(ResetAttack), 0.5f) ;
     }
     private void Jump()

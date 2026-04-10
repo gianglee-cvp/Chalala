@@ -8,6 +8,9 @@ TagManager:
   - DeathZone
   - SavePoint
   - EnemyWall
+  - EnemySight
+  - Enemy
+  - Kunai
   layers:
   - Default
   - TransparentFX
@@ -15,10 +18,10 @@ TagManager:
   - Ground
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
+  - EnemySight
+  - EnemyWall
+  - Enemy
+  - Kunai
   - 
   - 
   - 

@@ -16,7 +16,7 @@ public class Character : MonoBehaviour
 
     }
     protected virtual void OnDeath(){
-        
+    
     }
     public void OnHit(float damage  )
     {
@@ -29,6 +29,7 @@ public class Character : MonoBehaviour
                 OnDeath() ;
             }
         }
+        Debug.Log($"OnHit {damage} damage, hp left {hp}") ;
     }
 
     protected void ChangeAnim(string animName)

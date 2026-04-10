@@ -6,7 +6,6 @@ public class IdleState : IState
     float timer ; 
     public void OnEnter(Enemy enemy)
     {
-        Debug.Log("a");
         enemy.StopMoving();
         randomtime = Random.Range(2f, 4f);
         timer = 0f  ; 
@@ -14,7 +13,6 @@ public class IdleState : IState
 
     public void OnExecute(Enemy enemy)
     {
-        Debug.Log("b") ; 
         timer += Time.deltaTime;
         if(timer >= randomtime){
             enemy.ChangeState(new PatrolState());
