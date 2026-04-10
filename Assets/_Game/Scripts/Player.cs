@@ -40,6 +40,7 @@ public class Player : Character
     }
     public override void OnInit()
     {
+        base.OnInit() ;
         ChangeAnim("idle")   ;
         coin = 0 ; 
         isGrounded = true  ;    
@@ -52,8 +53,11 @@ public class Player : Character
     }
     protected override void OnDeath()
     {
+        Debug.Log("Player died") ;
         base.OnDeath();
-
+        ChangeAnim("die")   ;
+        isDead = true ;
+        Invoke(nameof(OnInit), 1f) ; // Reset game after 1 second
     }
 
     // Update is called once per frame
@@ -149,13 +153,21 @@ public class Player : Character
     private void Attack()
     {
         isAttack = true ;
-        ChangeAnim("attack")   ;    
+        ChangeAnim("attack")   ;     
+        if(attackArea != null)
+        {
+            attackArea.IsAttackAreaTriggered = true  ; // Cho tấn công kích hoạt vùng tấn công
+        }
         Invoke(nameof(ResetAttack), 0.5f) ;
     }
     private void ResetAttack()
     {
         //ChangeAnim("idle")   ;
         isAttack = false ;
+        if(attackArea != null)
+        {
+            attackArea.IsAttackAreaTriggered = false  ; // Reset trạng thái sau khi tấn công
+        }
     }
     private void Throw()
     {
@@ -180,11 +192,7 @@ public class Player : Character
         }
         if(collision.CompareTag("DeathZone"))
         {
-            Debug.Log("You died") ;
-            ChangeAnim("die") ;
-            isDead = true ;
-            // Disable player controls or trigger game over logic here
-            Invoke(nameof(OnInit), 1f) ; // Reset game after 2 seconds
+            OnDeath() ;
         }
         if(collision.CompareTag("SavePoint"))
         {

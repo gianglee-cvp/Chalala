@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using UnityEngine ;
 using UnityEngine.UIElements;
@@ -49,9 +50,14 @@ public class Enemy : Character
     }
     protected override void OnDeath(){
         base.OnDeath();
+        ChangeAnim("die") ;
+        StartCoroutine(DeathCoroutine());
+    }
+
+    private IEnumerator DeathCoroutine(){
+        yield return new WaitForSeconds(0.3f);
         gameObject.SetActive(false) ;
         Invoke(nameof(OnInit), 3f) ;
-        
     }
     public void Moving(){
         float direction = isRight ? 1f : -1f;
@@ -66,6 +72,16 @@ public class Enemy : Character
         Debug.Log("Attack") ;
         currentAnimName =  "" ; 
         ChangeAnim("attack")  ; 
+        if(attackArea != null){
+            attackArea.IsAttackAreaTriggered = true ; 
+        }
+        Invoke(nameof(ResetAttack), 0.5f) ; // Đảm bảo reset sau một khoảng thời gian để tránh việc tấn công liên tục nếu animation chưa kết thúc
+    }
+    public void ResetAttack()
+    {
+        if(attackArea != null){
+            attackArea.IsAttackAreaTriggered = false ; 
+        }
     }
     public bool IsTargetInRange(){
         return Vector2.Distance(transform.position, target.transform.position) <= attackRange ; 
@@ -104,8 +120,6 @@ public class Enemy : Character
         }
         if(collision.CompareTag("DeathZone"))
         {
-            Debug.Log("Enemy died") ;
-            ChangeAnim("die") ;
             OnDeath() ;
         }
     }

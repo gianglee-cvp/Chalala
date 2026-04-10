@@ -7,7 +7,7 @@ public class Character : MonoBehaviour
     public bool IsDead => hp <= 0 ;
     [SerializeField] private Animator anim  ;   
     protected string currentAnimName ; 
-
+    [SerializeField] protected AttackArea attackArea ;
     public virtual void OnInit(){
         hp = 100 ; 
         
@@ -16,7 +16,7 @@ public class Character : MonoBehaviour
 
     }
     protected virtual void OnDeath(){
-    
+        Debug.Log("Character died") ;
     }
     public void OnHit(float damage  )
     {
