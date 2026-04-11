@@ -75,7 +75,7 @@ public class Player : Character
         if (Input.GetKeyDown(KeyCode.V)) throwInput = true;
 
         string clipName = anim.GetCurrentAnimatorClipInfo(0).Length > 0 ? anim.GetCurrentAnimatorClipInfo(0)[0].clip.name : "none";
-        Debug.Log("isGrounded: " + isGrounded + " | current anim: " + currentAnimName + " | playing clip: " + clipName);
+     //   Debug.Log("isGrounded: " + isGrounded + " | current anim: " + currentAnimName + " | playing clip: " + clipName);
         if(isGrounded && (clipName != "idle")){
             anim.SetBool("jumptoidle", true);
         }
