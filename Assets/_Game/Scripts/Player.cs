@@ -37,12 +37,17 @@ public class Player : Character
     {
         savePoint = transform.position ;
         OnInit() ;
+       // coin = PlayerPrefs.GetInt("coin", 0) ;
+    }
+    void Awake()
+    {
+        coin = PlayerPrefs.GetInt("coin", 0) ;
     }
     public override void OnInit()
     {
         base.OnInit() ;
         ChangeAnim("idle")   ;
-        coin = 0 ; 
+        coin = PlayerPrefs.GetInt("coin", 0) ; 
         isGrounded = true  ;    
         isJumping = false;    
         isAttack  = false; 
@@ -51,7 +56,7 @@ public class Player : Character
         currentAnimName = null ;
         healthBar.SetHealth(100f) ;
         transform.position = savePoint ; 
-        UIManager.instance.SetCoinText(0) ;
+        UIManager.instance.SetCoinText(coin) ;
 
     }
     protected override void OnDeath()
@@ -205,6 +210,8 @@ public class Player : Character
         if(collision.CompareTag("Coin"))
         {
             coin++  ; 
+            PlayerPrefs.SetInt("coin", coin) ;
+            PlayerPrefs.Save() ;
             UIManager.instance.SetCoinText(coin);
             Destroy(collision.gameObject) ;
         }
