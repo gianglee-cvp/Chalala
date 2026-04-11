@@ -27,7 +27,7 @@ public class Kunai : MonoBehaviour
     }
     public void OnCollisionEnter2D(Collision2D collision)
     {
-        Debug.Log("Kunai collided with: " + collision.gameObject.name);
+       // Debug.Log("Kunai collided with: " + collision.gameObject.name);
         if (collision.gameObject.CompareTag("Enemy"))
         {
             Enemy enemy = collision.gameObject.GetComponent<Enemy>();

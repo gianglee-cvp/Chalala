@@ -14,7 +14,7 @@ public class MovingPlatform : MonoBehaviour
         transform.position = pointA.position ; 
         if (pointA == null || pointB == null)
         {
-            Debug.LogError("Point A and Point B must be assigned!");
+          //  Debug.LogError("Point A and Point B must be assigned!");
             return;
         }
         

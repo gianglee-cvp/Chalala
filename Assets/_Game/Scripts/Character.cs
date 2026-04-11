@@ -5,7 +5,7 @@ public class Character : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private  float hp  ; 
     public bool IsDead => hp <= 0 ;
-    [SerializeField] private Animator anim  ;   
+    [SerializeField] public Animator anim  ;   
     protected string currentAnimName ; 
     [SerializeField] protected AttackArea attackArea ;
     [SerializeField] protected HealthBar healthBar ;
@@ -22,7 +22,7 @@ public class Character : MonoBehaviour
         return 100f ; // Replace with actual max health value
     }
     protected virtual void OnDeath(){
-        Debug.Log("Character died") ;
+     //   Debug.Log("Character died") ;
     }
     public void OnHit(float damage )
     {
@@ -47,12 +47,13 @@ public class Character : MonoBehaviour
                 }
             }
         }
-        Debug.Log($"OnHit {damage} damage, hp left {hp}") ;
+      //  Debug.Log($"OnHit {damage} damage, hp left {hp}") ;
     }
 
     protected void ChangeAnim(string animName)
     {
        // Debug.Log($"ChangeAnim from {currentAnimName} to {animName}") ;
+
         if(currentAnimName != animName)
         {
             anim.ResetTrigger(animName) ;

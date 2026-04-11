@@ -8,7 +8,7 @@ public class EnemySight : MonoBehaviour
     {
         if(collision.CompareTag("Player"))
         {
-            Debug.Log("Player Detected") ; 
+            // Debug.Log("Player Detected") ; 
             enemy.SetTarget(collision.GetComponent<Character>()) ;
         }
     }
@@ -16,7 +16,7 @@ public class EnemySight : MonoBehaviour
     {
         if (collision.CompareTag("Player"))
         {
-            Debug.Log("Player Lost") ; 
+          //  Debug.Log("Player Lost") ; 
             enemy.SetTarget(null) ;
         }
     }

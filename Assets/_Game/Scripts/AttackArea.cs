@@ -51,10 +51,6 @@ public class AttackArea : MonoBehaviour
     }
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (debugTriggerLogs)
-        {
-            Debug.Log($"[AttackArea] Exit: {collision.name} (id {collision.GetInstanceID()}) tag={collision.tag} time={Time.time:0.000}");
-        }
         // Có thể thêm logic khi đối tượng rời khỏi vùng tấn công nếu cần
         if(collision.CompareTag("Player") || collision.CompareTag("Enemy"))
         {

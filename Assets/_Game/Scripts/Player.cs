@@ -51,12 +51,13 @@ public class Player : Character
         currentAnimName = null ;
         healthBar.SetHealth(100f) ;
         transform.position = savePoint ; 
+        UIManager.instance.SetCoinText(0) ;
 
     }
     protected override void OnDeath()
     {
         healthBar.SetHealth(0f) ;
-        Debug.Log("Player died") ;
+     //   Debug.Log("Player died") ;
         base.OnDeath();
         ChangeAnim("die")   ;
         isDead = true ;
@@ -67,11 +68,20 @@ public class Player : Character
     void Update()
     {
         // lấy input từ bàn phím trong Update để không bị delay
-        horizontal = Input.GetAxisRaw("Horizontal");
+       // horizontal = Input.GetAxisRaw("Horizontal");
 
         if (Input.GetKeyDown(KeyCode.Space)) jumpInput = true;
         if (Input.GetKeyDown(KeyCode.C)) attackInput = true;
         if (Input.GetKeyDown(KeyCode.V)) throwInput = true;
+
+        string clipName = anim.GetCurrentAnimatorClipInfo(0).Length > 0 ? anim.GetCurrentAnimatorClipInfo(0)[0].clip.name : "none";
+        Debug.Log("isGrounded: " + isGrounded + " | current anim: " + currentAnimName + " | playing clip: " + clipName);
+        if(isGrounded && (clipName != "idle")){
+            anim.SetBool("jumptoidle", true);
+        }
+        else{
+            anim.SetBool("jumptoidle", false);
+        }
     }
 
     void FixedUpdate()
@@ -110,10 +120,13 @@ public class Player : Character
             }
             else
             {
+             //   Debug.Log("Horizontal: " + horizontal);
                 if(!isAttack && Math.Abs(horizontal)  <= 0.1f)
                 {
+                 //   Debug.Log("Changing to idle animation") ;
                     ChangeAnim("idle")   ;
                 }
+                
             }
         }
 
@@ -151,9 +164,10 @@ public class Player : Character
         }
         Debug.DrawLine(transform.position, transform.position + Vector3.down * 1.1f, Color.red);
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 1.1f, groundLayer);
+     //   Debug.Log("Ground check hit: " + (hit.collider != null ? hit.collider.name : "None") + " - " + hit.collider != null);
         return hit.collider != null;
     }
-    private void Attack()
+    public void Attack()
     {
         isAttack = true ;
         ChangeAnim("attack")   ;     
@@ -172,14 +186,14 @@ public class Player : Character
             attackArea.IsAttackAreaTriggered = false  ; // Reset trạng thái sau khi tấn công
         }
     }
-    private void Throw()
+    public void Throw()
     {
         isAttack = true ;
         ChangeAnim("throw") ;
         Instantiate(kunai, transform.position + transform.right * 0.5f, transform.rotation) ;
         Invoke(nameof(ResetAttack), 0.5f) ;
     }
-    private void Jump()
+    public void Jump()
     {
         isJumping = true ;
         ChangeAnim("jump")   ;
@@ -191,6 +205,7 @@ public class Player : Character
         if(collision.CompareTag("Coin"))
         {
             coin++  ; 
+            UIManager.instance.SetCoinText(coin);
             Destroy(collision.gameObject) ;
         }
         if(collision.CompareTag("DeathZone"))
@@ -202,5 +217,26 @@ public class Player : Character
             savePoint = collision.transform.position ;
         }
     }
+    public void Setmove(float horizontal)
+    {
+      //  Debug.Log("Setmove called with horizontal: " + horizontal);
+        this.horizontal = horizontal ;
+    }
+    public void SetButton(string buttonName)
+    {
+        switch (buttonName)
+        {
+            case "Jump":
+                jumpInput = true;
+                break;
+            case "Attack":
+                attackInput = true;
+                break;
+            case "Throw":
+                throwInput = true;
+                break;
+        }
+    }
 }
+
 
