@@ -39,6 +39,11 @@ public class Enemy : Character
 
     public override void OnInit(){
         base.OnInit();
+
+
+        if(healthBar != null){
+            healthBar.SetHealth(100f) ;
+        }        
         gameObject.SetActive(true) ;
         transform.position = savePoint ; 
         ChangeState(new IdleState());

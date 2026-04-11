@@ -9,6 +9,7 @@ public class Character : MonoBehaviour
     protected string currentAnimName ; 
     [SerializeField] protected AttackArea attackArea ;
     [SerializeField] protected HealthBar healthBar ;
+    [SerializeField] protected GameObject combatTextPrefab ;
     public virtual void OnInit(){
         hp = 100 ; 
         
@@ -23,11 +24,16 @@ public class Character : MonoBehaviour
     protected virtual void OnDeath(){
         Debug.Log("Character died") ;
     }
-    public void OnHit(float damage  )
+    public void OnHit(float damage )
     {
         if(!IsDead)
         {
             hp -= damage ;
+         //   Instantiate(combatText, transform.position + Vector3.up, Quaternion.identity).OnInit(damage) ;
+            if(combatTextPrefab != null)
+            {
+                Instantiate(combatTextPrefab, transform.position + Vector3.up + (transform.rotation * Vector3.right), Quaternion.identity).GetComponent<CombatText>().OnInit(damage) ;
+            }
             if(IsDead)
             {
                 hp = 0 ;

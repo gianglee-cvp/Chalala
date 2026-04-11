@@ -122,7 +122,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 2916470908484351543}
   speed: 10
-  damage: 10
+  damage: 20
   lifetime: 50
   player: {fileID: 0}
   hitEffectPrefab: {fileID: 5737290117187228819, guid: c4b863f21066b634bafe56af2d953c6f, type: 3}
