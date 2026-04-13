@@ -20,15 +20,37 @@ public class Player : Character
     private bool isAttack  = false; 
     private bool isDead = false;
 
-    private float horizontal ; 
-   // private string currentAnimName ; 
+    private float horizontal ;
+    private float joystickHorizontal; // Lưu biến Joystick mềm riêng biệt
+    private Vector2 lastAimDirection = Vector2.right; // Biến nhớ lưu hướng kéo Joystick để ném 360 độ
+   // private string currentAnimName ;
     
+    [Header("Glide Settings")]
+    [SerializeField] private float glideStartHeight = 6f;
+    [SerializeField] private float glideStopHeight = 3f;
+    [SerializeField] private float maxGlideFallSpeed = 3f;
+    [SerializeField] private float glideMoveSpeed = 3f;
+    private bool isGliding = false;
+
+    [Header("Dash Settings")]
+    [SerializeField] private float dashSpeed = 15f;
+    [SerializeField] private float dashDuration = 0.2f;
+    [SerializeField] private float dashCooldown = 1f;
+    private bool isDashing;
+    private bool canDash = true;
+    private float originalGravity;
+    [Header("Tele Setting")]
+    public Transform telePoint1;
+    private GameObject activeKunai;
+
     // Input buffers to capture inputs in Update and execute them in FixedUpdate
     private bool jumpInput;
     private bool attackInput;
     private bool throwInput;
+    private bool dashInput;
+    private bool teleportInput;
 
-    private Vector3 savePoint ; 
+    private Vector3 savePoint ;
 
     // private float vertical ;
 
@@ -52,7 +74,12 @@ public class Player : Character
         isJumping = false;    
         isAttack  = false; 
         isDead = false;
-        horizontal = 0f ; 
+        isDashing = false;
+        canDash = true;
+        isGliding = false;
+        if (anim != null) anim.SetBool("Fly", false);
+        if (rb != null) originalGravity = rb.gravityScale;
+        horizontal = 0f ;
         currentAnimName = null ;
         healthBar.SetHealth(100f) ;
         transform.position = savePoint ; 
@@ -72,12 +99,41 @@ public class Player : Character
     // Update is called once per frame
     void Update()
     {
-        // lấy input từ bàn phím trong Update để không bị delay
-       // horizontal = Input.GetAxisRaw("Horizontal");
+        // Bắt trọn 2 trục X Y của bàn phím:
+        horizontal = Input.GetAxisRaw("Horizontal");
+        Vector2 moveDir = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+
+        if (Math.Abs(joystickHorizontal) > 0.05f)
+        {
+            horizontal = joystickHorizontal;
+            moveDir = new Vector2(joystickHorizontal, moveDir.y); // Hỗ trợ gán x tay
+        }
+
+        // Tự động quét và kéo dữ liệu X, Y từ Component On-Screen Stick 
+        if (Gamepad.current != null && Gamepad.current.leftStick.ReadValue().magnitude > 0.05f)
+        {
+            Vector2 stickInput = Gamepad.current.leftStick.ReadValue();
+            horizontal = stickInput.x;
+            moveDir = stickInput;
+        }
+        else if (UnityEngine.InputSystem.Joystick.current != null && UnityEngine.InputSystem.Joystick.current.stick.ReadValue().magnitude > 0.05f)
+        {
+            Vector2 stickInput = UnityEngine.InputSystem.Joystick.current.stick.ReadValue();
+            horizontal = stickInput.x;
+            moveDir = stickInput;
+        }
+
+        // Bộ não ghi nhớ 360 độ: Cứ kéo joystick đi đâu, nó lưu hướng đó lại để lát lấy ra ném Kunai
+        if (moveDir.magnitude > 0.05f)
+        {
+            lastAimDirection = moveDir.normalized;
+        }
 
         if (Input.GetKeyDown(KeyCode.Space)) jumpInput = true;
         if (Input.GetKeyDown(KeyCode.C)) attackInput = true;
         if (Input.GetKeyDown(KeyCode.V)) throwInput = true;
+        if (Input.GetKeyDown(KeyCode.LeftShift)) dashInput = true;
+        if (Input.GetKeyDown(KeyCode.T)) teleportInput = true;
 
         string clipName = anim.GetCurrentAnimatorClipInfo(0).Length > 0 ? anim.GetCurrentAnimatorClipInfo(0)[0].clip.name : "none";
      //   Debug.Log("isGrounded: " + isGrounded + " | current anim: " + currentAnimName + " | playing clip: " + clipName);
@@ -92,7 +148,50 @@ public class Player : Character
     void FixedUpdate()
     {
         if(isDead) return; // Nếu đã chết, không thực hiện các hành động tiếp theo
+
+        if (teleportInput)
+        {
+            TeleportToKunai();
+        }
+
+        if (dashInput && canDash)
+        {
+            StartCoroutine(DashCoroutine());
+        }
+
+        if (isDashing)
+        {
+            jumpInput = false;
+            attackInput = false;
+            throwInput = false;
+            dashInput = false;
+            return;
+        }
+
         isGrounded = CheckGrounded() ;  
+
+        // --- Tính toán Gliding (Lơ lửng sải cánh) ---
+        if (!isGrounded && rb.linearVelocity.y < 0f)
+        {
+            RaycastHit2D groundHit = Physics2D.Raycast(transform.position, Vector2.down, 20f, groundLayer);
+            float groundDist = groundHit.collider != null ? groundHit.distance : 20f;
+
+            if (!isGliding && groundDist >= glideStartHeight)
+            {
+                isGliding = true;
+                anim.SetBool("Fly", true);
+            }
+            else if (isGliding && groundDist < glideStopHeight)
+            {
+                isGliding = false;
+                anim.SetBool("Fly", false);
+            }
+        }
+        else if (isGrounded && isGliding)
+        {
+            isGliding = false;
+            anim.SetBool("Fly", false);
+        }
 
         if (isGrounded)
         {
@@ -138,16 +237,21 @@ public class Player : Character
 
         if(!isGrounded && rb.linearVelocity.y < 0.01f)
         {
-            ChangeAnim("fall")   ;
+            if (!isGliding) ChangeAnim("fall")   ;
         }
+
+        // Kìm hãm tốc độ rơi nếu đang Glide
+        if (isGliding && rb.linearVelocity.y < -maxGlideFallSpeed)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, -maxGlideFallSpeed);
+        }
+
         //moving
         if(Math.Abs(horizontal)  > 0.1f && !isAttack)
         {
-            // linearVelocity là vận tốc tuyến tính của Rigidbody2D, đã là đơn vị m/s nên có thể không cần nhân với Time.deltaTime
-            rb.linearVelocity = new Vector2(horizontal * speed   , rb.linearVelocity.y) ; 
+            float targetSpeed = isGliding ? glideMoveSpeed : speed;
+            rb.linearVelocity = new Vector2(horizontal * targetSpeed   , rb.linearVelocity.y) ; 
             transform.rotation = horizontal > 0 ? Quaternion.identity : Quaternion.Euler(0, 180, 0) ;
-            // identity là một phép quay không có sự thay đổi, nghĩa là đối tượng sẽ không bị xoay. Còn Quaternion.Euler(0, 180, 0) sẽ xoay đối tượng 180 độ quanh trục Y, làm cho nó quay ngược lại.
-
         }
         else if(isGrounded)
         {
@@ -159,6 +263,8 @@ public class Player : Character
         jumpInput = false;
         attackInput = false;
         throwInput = false;
+        dashInput = false;
+        teleportInput = false;
     }
     private bool CheckGrounded() 
     {
@@ -195,8 +301,29 @@ public class Player : Character
     {
         isAttack = true ;
         ChangeAnim("throw") ;
-        Instantiate(kunai, transform.position + transform.right * 0.5f, transform.rotation) ;
+
+        // Tính góc bay 360 độ (xoay theo trục Z) dựa trên lực kéo Joystick
+        float angle = Mathf.Atan2(lastAimDirection.y, lastAimDirection.x) * Mathf.Rad2Deg;
+        Quaternion aimRotation = Quaternion.Euler(0, 0, angle);
+
+        // Sinh phi tiêu đẩy ra 0.5 mét theo chính cái hướng đó
+        activeKunai = Instantiate(kunai, transform.position + (Vector3)(lastAimDirection * 0.5f), aimRotation) ;
+        
         Invoke(nameof(ResetAttack), 0.5f) ;
+    }
+
+    public void TeleportToKunai()
+    {
+        // Unity tự động hiểu activeKunai == null nếu object đã bị Destroy (bay trúng quái hoặc hết lifetime)
+        if (activeKunai != null)
+        {
+            transform.position = activeKunai.transform.position;
+            rb.linearVelocity = Vector2.zero; // Reset quán tính rơi để nhân vật lơ lửng chờ phản ứng
+            
+            // Xoá phi tiêu ngay sau khi tele tới (nếu không xoá thì comment dòng dưới lại)
+            Destroy(activeKunai);
+            activeKunai = null;
+        }
     }
     public void Jump()
     {
@@ -224,10 +351,39 @@ public class Player : Character
             savePoint = collision.transform.position ;
         }
     }
-    public void Setmove(float horizontal)
+    private System.Collections.IEnumerator DashCoroutine()
     {
-      //  Debug.Log("Setmove called with horizontal: " + horizontal);
-        this.horizontal = horizontal ;
+        canDash = false;
+        isDashing = true;
+
+        // Lưu và tắt trọng lực để không bị rớt xuống khi lướt trên không
+        originalGravity = rb.gravityScale;
+        rb.gravityScale = 0f;
+
+        // Hướng lướt phụ thuộc vào hướng mặt hiển tại
+        float dashDir = transform.right.x > 0 ? 1f : -1f;
+
+        rb.linearVelocity = new Vector2(dashDir * dashSpeed, 0f);
+
+        // Nếu bạn có animation dash, mở comment dòng dưới (cần thiết lập animation)
+        // ChangeAnim("dash"); 
+
+        yield return new WaitForSeconds(dashDuration);
+
+        // Kết thúc lướt
+        rb.gravityScale = originalGravity;
+        rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        isDashing = false;
+
+        // Hồi chiêu
+        yield return new WaitForSeconds(dashCooldown);
+        canDash = true;
+    }
+
+    // Gọi hàm này từ OnScreenStick (Event OnDrag hoặc Update của UI Joystick)
+    public void Setmove(float stickMoveX)
+    {
+        this.joystickHorizontal = stickMoveX ;
     }
     public void SetButton(string buttonName)
     {
@@ -240,7 +396,13 @@ public class Player : Character
                 attackInput = true;
                 break;
             case "Throw":
-                throwInput = true;
+                throwInput = true;  
+                break;
+            case "Dash":
+                dashInput = true;
+                break;
+            case "Teleport":
+                teleportInput = true;
                 break;
         }
     }

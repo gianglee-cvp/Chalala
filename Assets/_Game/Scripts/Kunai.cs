@@ -9,6 +9,7 @@ public class Kunai : MonoBehaviour
     public float lifetime;
     private Vector2 direction;
     public Transform player;
+    public Player  playerScript;
     public ParticleSystem hitEffectPrefab;
     void Start()
     {
